@@ -46,7 +46,7 @@ if st.button("실행"):
     # 모델 실행 및 결과 출력
     with st.spinner("생성 중..."):
         output = model.generate(
-            input_ids.to("cuda"),  # Streamlit Cloud는 CPU만 지원하므로 이 부분 수정 필요
+            input_ids.to("cpu"), 
             eos_token_id=tokenizer.eos_token_id,
             max_new_tokens=128
         )
