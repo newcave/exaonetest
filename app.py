@@ -43,4 +43,3 @@ if st.button("Generate Response"):
         response = tokenizer.decode(output[0], skip_special_tokens=True)
         st.write("**Response:**")
         st.write(response)
-
