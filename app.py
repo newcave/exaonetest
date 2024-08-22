@@ -1,53 +1,23 @@
-# import subprocess
-# import sys
-# Install torch if not already installed
-# subprocess.check_call([sys.executable, "-m", "pip", "install", "torch"])
-
-########################
-
+import transformers
 import streamlit as st
-import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
 
-# 모델 로딩 (캐싱 활용)
-@st.cache_resource
-def load_model():
-    model = AutoModelForCausalLM.from_pretrained(
-        "LGAI-EXAONE/EXAONE-3.0-7.8B-Instruct",
-        torch_dtype=torch.bfloat16,
-        trust_remote_code=True,
-        device_map="auto"
-    )
-    tokenizer = AutoTokenizer.from_pretrained("LGAI-EXAONE/EXAONE-3.0-7.8B-Instruct")
-    return model, tokenizer
+# LLaMA 2 7B Chat 모델 로드
+model_name = "meta-llama/Llama-2-7b-chat-hf"
+model = transformers.AutoModelForCausalLM.from_pretrained(model_name, device_map="auto")
+tokenizer = transformers.AutoTokenizer.from_pretrained(model_name)
 
-model, tokenizer = load_model()
+# Streamlit 앱
+st.title("LLaMA AI Assistant")
+st.write("LLaMA 2 7B Chat Model")
 
-# Streamlit 앱 제목 설정
-st.title("EXAONE 3.0 Demo")
+# 프롬프트 입력
+prompt = st.text_input("Enter your prompt", value="Explain who you are")
 
-# 프롬프트 입력 텍스트 영역
-prompt = st.text_area("프롬프트를 입력하세요:", value="너의 소원을 말해봐")
-
-# 실행 버튼
-if st.button("실행"):
-    # 메시지 생성
-    messages = [
-        {"role": "system", "content": "You are EXAONE model from LG AI Research, a helpful assistant."},
-        {"role": "user", "content": prompt}
-    ]
-    input_ids = tokenizer.apply_chat_template(
-        messages,
-        tokenize=True,
-        add_generation_prompt=True,
-        return_tensors="pt"
-    )
-
-    # 모델 실행 및 결과 출력
-    with st.spinner("생성 중..."):
-        output = model.generate(
-            input_ids.to("cpu"), 
-            eos_token_id=tokenizer.eos_token_id,
-            max_new_tokens=128
-        )
-    st.write(tokenizer.decode(output[0]))
+# 버튼 클릭 시 응답 생성
+if st.button("Generate Response"):
+    with st.spinner("Generating..."):
+        inputs = tokenizer(prompt, return_tensors="pt")
+        output = model.generate(**inputs)
+        response = tokenizer.decode(output[0], skip_special_tokens=True)
+        st.write("**Response:**")
+        st.write(response)
