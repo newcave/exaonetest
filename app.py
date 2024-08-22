@@ -1,23 +1,45 @@
-import transformers
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
 import streamlit as st
 
-# LLaMA 2 7B Chat 모델 로드
-model_name = "meta-llama/Llama-2-7b-chat-hf"
-model = transformers.AutoModelForCausalLM.from_pretrained(model_name, device_map="auto")
-tokenizer = transformers.AutoTokenizer.from_pretrained(model_name)
+# Load the model and tokenizer
+model = AutoModelForCausalLM.from_pretrained(
+    "LGAI-EXAONE/EXAONE-3.0-7.8B-Instruct",
+    torch_dtype=torch.bfloat16,
+    trust_remote_code=True,
+    device_map="auto"
+)
+tokenizer = AutoTokenizer.from_pretrained("LGAI-EXAONE/EXAONE-3.0-7.8B-Instruct")
 
-# Streamlit 앱
-st.title("LLaMA AI Assistant")
-st.write("LLaMA 2 7B Chat Model")
+# Streamlit app
+st.title("EXAONE AI Assistant")
+st.write("Interact with the EXAONE model by entering a prompt below:")
 
-# 프롬프트 입력
+# Input field for the prompt
 prompt = st.text_input("Enter your prompt", value="Explain who you are")
 
-# 버튼 클릭 시 응답 생성
+# Generate response when button is clicked
 if st.button("Generate Response"):
     with st.spinner("Generating..."):
-        inputs = tokenizer(prompt, return_tensors="pt")
-        output = model.generate(**inputs)
+        messages = [
+            {"role": "system", "content": "You are EXAONE model from LG AI Research, a helpful assistant."},
+            {"role": "user", "content": prompt}
+        ]
+        input_ids = tokenizer.apply_chat_template(
+            messages,
+            tokenize=True,
+            add_generation_prompt=True,
+            return_tensors="pt"
+        )
+
+        # Generate output (use CPU here)
+        output = model.generate(
+            input_ids.to("cpu"),  # Ensure it's set to CPU
+            eos_token_id=tokenizer.eos_token_id,
+            max_new_tokens=128
+        )
+
+        # Decode and display the output
         response = tokenizer.decode(output[0], skip_special_tokens=True)
         st.write("**Response:**")
         st.write(response)
