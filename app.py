@@ -2,13 +2,17 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import streamlit as st
 
+# Check if CUDA is available and set device accordingly
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 # Load the model and tokenizer
 model = AutoModelForCausalLM.from_pretrained(
     "LGAI-EXAONE/EXAONE-3.0-7.8B-Instruct",
     torch_dtype=torch.bfloat16,
     trust_remote_code=True,
     device_map="auto"
-)
+).to(device)
+
 tokenizer = AutoTokenizer.from_pretrained("LGAI-EXAONE/EXAONE-3.0-7.8B-Instruct")
 
 # Streamlit app
@@ -30,11 +34,11 @@ if st.button("Generate Response"):
             tokenize=True,
             add_generation_prompt=True,
             return_tensors="pt"
-        )
+        ).to(device)
 
         # Generate output
         output = model.generate(
-            input_ids.to("cuda"),
+            input_ids,
             eos_token_id=tokenizer.eos_token_id,
             max_new_tokens=128
         )
