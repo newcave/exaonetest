@@ -1,3 +1,11 @@
+import subprocess
+import sys
+
+# Install torch if not already installed
+subprocess.check_call([sys.executable, "-m", "pip", "install", "torch"])
+
+########################
+
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import streamlit as st
