@@ -3,15 +3,14 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStream
 import streamlit as st
 from threading import Thread
 
-# 모델 및 토크나이저 로드
 @st.cache_resource
 def load_model():
     model_name = "LGAI-EXAONE/EXAONE-Deep-2.4B"
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
-        torch_dtype=torch.bfloat16,
+        torch_dtype=torch.float32,
         trust_remote_code=True,
-        device_map="auto"
+        device_map='cpu'  # CPU에서 모델 로드
     )
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     return model, tokenizer
